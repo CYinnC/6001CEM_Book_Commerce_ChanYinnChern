@@ -120,15 +120,15 @@ const upload = multer({ storage });
 
 // Add Book Route
 app.post('/api/books', upload.single('image'), (req, res) => {
-    const { title, author, condition, description, user_id, type } = req.body;
-    const imagePath = req.file ? req.file.path : null; // Get the file path
+    const { title, author, condition, description, user_id, type, price } = req.body; 
+    const imagePath = req.file ? req.file.path : null;
 
     db.query(
-        'INSERT INTO books (user_id, title, author, `condition`, description, image, type) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [user_id, title, author, condition, description, imagePath, type], // Correct order
+        'INSERT INTO books (user_id, title, author, `condition`, description, image, type, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', // Add price in the query
+        [user_id, title, author, condition, description, imagePath, type, price],
         (err) => {
             if (err) {
-                console.error('SQL Error:', err); // Log detailed SQL error
+                console.error('SQL Error:', err);
                 return res.status(500).json({ error: err.message });
             }
             res.status(201).json({ message: 'Book added successfully!' });
@@ -138,11 +138,10 @@ app.post('/api/books', upload.single('image'), (req, res) => {
 
 // Get all books
 app.get('/api/books', (req, res) => {
-    const userId = req.query.userId; // Get user ID from query parameters
+    const userId = req.query.userId;
     let query = 'SELECT * FROM books';
     let params = [];
 
-    // If user ID is provided, filter by user ID
     if (userId) {
         query += ' WHERE user_id = ?';
         params.push(userId);
@@ -154,6 +153,32 @@ app.get('/api/books', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
         res.json(results);
+    });
+});
+
+app.get('/api/book-counts', (req, res) => {
+    db.query('SELECT type, COUNT(*) AS count FROM books GROUP BY type', (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        const counts = results.reduce((acc, row) => {
+            acc[row.type] = row.count;
+            return acc;
+        }, { selling: 0, trading: 0 });
+
+        res.json(counts);
+    });
+});
+
+
+// Get user by ID
+app.get('/users/:id', (req, res) => {
+    const userId = req.params.id;
+    db.query('SELECT username FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ error: 'User not found' });
+        res.json(results[0]); // Return the user object
     });
 });
 
