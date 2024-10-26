@@ -34,15 +34,21 @@ const hashPassword = (password) => {
     return crypto.createHash('sha256').update(password).digest('hex');
 };
 
-// Sign Up Route
+// Hash email
+const hashEmail = (email) => {
+    return crypto.createHash('sha256').update(email).digest('hex');
+};
+
+// Sign Up 
 app.post('/signup', (req, res) => {
     const { username, email, password } = req.body;
     const hashedPassword = hashPassword(password);
-    const defaultRole = 'user'; // Default role
+    const hashedEmail = hashEmail(email);
+    const defaultRole = 'user';
 
     db.query(
         'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', 
-        [username, email, hashedPassword, defaultRole], 
+        [username, hashedEmail, hashedPassword, defaultRole], 
         (err) => {
             if (err) return res.status(500).json({ error: err.message });
             res.status(201).json({ message: 'User registered successfully!' });
@@ -53,9 +59,10 @@ app.post('/signup', (req, res) => {
 // Login Route
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    const hashedPassword = hashPassword(password); // Hash the incoming password
+    const hashedPassword = hashPassword(password);
+    const hashedEmail = hashEmail(email);
 
-    db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
+    db.query('SELECT * FROM users WHERE email = ?', [hashedEmail], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Database query error: ' + err.message });
@@ -92,7 +99,7 @@ app.delete('/users/:id', (req, res) => {
     const userId = req.params.id;
     db.query('DELETE FROM users WHERE id = ?', [userId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(204).send(); // No content
+        res.status(204).send();
     });
 });
 
