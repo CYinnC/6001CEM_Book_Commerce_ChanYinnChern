@@ -109,7 +109,7 @@ app.patch('/users/:id/role', (req, res) => {
     const { role } = req.body;
     db.query('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(204).send(); // No content
+        res.status(204).send();
     });
 });
 
@@ -209,6 +209,84 @@ app.get('/api/books/:id', (req, res) => {
     );
 });
 
+
+// Add Request Route
+app.post('/api/requests', (req, res) => {
+    const { bookId, requestType, phoneNumber, shippingAddress, title, bookCondition, description, buyerId, sellerId } = req.body;
+
+    const newRequest = {
+        book_id: bookId,
+        request_type: requestType,
+        phone_number: phoneNumber,
+        shipping_address: shippingAddress,
+        title,
+        book_condition: bookCondition,
+        description,
+        buyer_id: buyerId, 
+        seller_id: sellerId,
+        status: 'pending',
+    };
+
+    db.query('INSERT INTO requests SET ?', newRequest, (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Request created successfully!', request: newRequest });
+    });
+});
+
+
+
+// Add Request Route
+app.post('/api/requests', (req, res) => {
+    const { bookId, requestType, phoneNumber, shippingAddress, title, bookCondition, description, buyerId, sellerId } = req.body;
+
+    const newRequest = {
+        book_id: bookId,
+        request_type: requestType,
+        phone_number: phoneNumber,
+        shipping_address: shippingAddress,
+        title,
+        book_condition: bookCondition,
+        description,
+        buyer_id: buyerId,
+        seller_id: sellerId,
+        status: 'pending',
+    };
+
+    db.query('INSERT INTO requests SET ?', newRequest, (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Request created successfully!', request: newRequest });
+    });
+});
+
+// Get all requests
+app.get('/api/requests', (req, res) => {
+    db.query('SELECT * FROM requests', (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results);
+    });
+});
+
+
+// Delete Request Route
+app.delete('/api/requests/:id', (req, res) => {
+    const requestId = req.params.id;
+    db.query('DELETE FROM requests WHERE id = ?', [requestId], (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(204).send();
+    });
+});
 
 
 app.listen(port, () => {
