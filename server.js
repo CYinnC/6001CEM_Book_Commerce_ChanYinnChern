@@ -262,6 +262,24 @@ app.get('/api/requests', (req, res) => {
     });
 });
 
+// Update Request Status
+app.put('/api/requests/:id', (req, res) => {
+    const requestId = req.params.id;
+    const { status } = req.body;
+
+    if (!status) {
+        return res.status(400).json({ error: 'Status is required' });
+    }
+
+    db.query('UPDATE requests SET status = ? WHERE id = ?', [status, requestId], (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(200).json({ message: 'Request updated successfully' });
+    });
+});
+
 
 // Delete Request
 app.delete('/api/requests/:id', (req, res) => {
