@@ -223,14 +223,12 @@ app.get('/api/books/:id', (req, res) => {
     );
 });
 
+// Add trade request
+app.post('/api/trades', (req, res) => {
+    const { bookId, phoneNumber, meetupLocation, title, bookCondition, description, buyerId, sellerId } = req.body;
 
-// Add Request
-app.post('/api/requests', (req, res) => {
-    const { bookId, requestType, phoneNumber, meetupLocation, title, bookCondition, description, buyerId, sellerId } = req.body;
-
-    const newRequest = {
+    const newTrade = {
         book_id: bookId,
-        request_type: requestType,
         phone_number: phoneNumber,
         meet_up_location: meetupLocation,
         title,
@@ -241,19 +239,19 @@ app.post('/api/requests', (req, res) => {
         status: 'pending',
     };
 
-    db.query('INSERT INTO requests SET ?', newRequest, (err) => {
+    db.query('INSERT INTO trades SET ?', newTrade, (err) => {
         if (err) {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(201).json({ message: 'Request created successfully!', request: newRequest });
+        res.status(201).json({ message: 'Trade created successfully!', trade: newTrade });
     });
 });
 
 
-// Get all requests
-app.get('/api/requests', (req, res) => {
-    db.query('SELECT * FROM requests', (err, results) => {
+// Get trade request
+app.get('/api/trades', (req, res) => {
+    db.query('SELECT * FROM trades', (err, results) => {
         if (err) {
             console.error('Database query error:', err);
             return res.status(500).json({ error: err.message });
@@ -262,29 +260,31 @@ app.get('/api/requests', (req, res) => {
     });
 });
 
-// Update Request Status
-app.put('/api/requests/:id', (req, res) => {
-    const requestId = req.params.id;
+
+// Update trade status
+app.put('/api/trades/:id', (req, res) => {
+    const tradeId = req.params.id;
     const { status } = req.body;
 
     if (!status) {
         return res.status(400).json({ error: 'Status is required' });
     }
 
-    db.query('UPDATE requests SET status = ? WHERE id = ?', [status, requestId], (err) => {
+    db.query('UPDATE trades SET status = ? WHERE id = ?', [status, tradeId], (err) => {
         if (err) {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(200).json({ message: 'Request updated successfully' });
+        res.status(200).json({ message: 'Trade updated successfully' });
     });
 });
 
 
-// Delete Request
-app.delete('/api/requests/:id', (req, res) => {
-    const requestId = req.params.id;
-    db.query('DELETE FROM requests WHERE id = ?', [requestId], (err) => {
+
+// Delete trade request
+app.delete('/api/trades/:id', (req, res) => {
+    const tradeId = req.params.id;
+    db.query('DELETE FROM trades WHERE id = ?', [tradeId], (err) => {
         if (err) {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
@@ -292,6 +292,75 @@ app.delete('/api/requests/:id', (req, res) => {
         res.status(204).send();
     });
 });
+
+
+
+// Add purchase request
+app.post('/api/purchases', (req, res) => {
+    const { bookId, phoneNumber, shippingAddress, buyerId, sellerId, status } = req.body;
+
+    const newPurchase = {
+        book_id: bookId,
+        phone_number: phoneNumber,
+        shipping_address: shippingAddress,
+        buyer_id: buyerId, 
+        seller_id: sellerId,
+        status,
+        created_time: new Date(),
+    };
+
+    db.query('INSERT INTO purchases SET ?', newPurchase, (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ message: 'Purchase created successfully!', purchase: newPurchase });
+    });
+});
+
+// Get purchase requests
+app.get('/api/purchases', (req, res) => {
+    db.query('SELECT * FROM purchases', (err, results) => {
+        if (err) {
+            console.error('Database query error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results);
+    });
+});
+
+// Update purchase status
+app.put('/api/purchases/:id', (req, res) => {
+    const purchaseId = req.params.id;
+    const { status } = req.body;
+
+    if (!status) {
+        return res.status(400).json({ error: 'Status is required' });
+    }
+
+    db.query('UPDATE purchases SET status = ? WHERE id = ?', [status, purchaseId], (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(200).json({ message: 'Purchase updated successfully' });
+    });
+});
+
+
+
+// Delete trade request
+app.delete('/api/purchases/:id', (req, res) => {
+    const purchaseId = req.params.id;
+    db.query('DELETE FROM trades WHERE id = ?', [purchaseId], (err) => {
+        if (err) {
+            console.error('SQL Error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(204).send();
+    });
+});
+
 
 // Update recommendation status
 app.put('/api/recommendations', (req, res) => {
