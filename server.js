@@ -127,12 +127,12 @@ const upload = multer({ storage });
 
 // Add Book
 app.post('/api/books', upload.single('image'), (req, res) => {
-    const { title, author, condition, description, user_id, type, price } = req.body; 
+    const { title, author, condition, description, user_id, type, price, genres } = req.body; 
     const imagePath = req.file ? req.file.path : null;
 
     db.query(
-        'INSERT INTO books (user_id, title, author, `condition`, description, image, type, price, recommended) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-        [user_id, title, author, condition, description, imagePath, type, price, 'default'],
+        'INSERT INTO books (user_id, title, author, `condition`, description, image, type, price, recommended, genres) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+        [user_id, title, author, condition, description, imagePath, type, price, 'default', genres],
         (err) => {
             if (err) {
                 console.error('SQL Error:', err);
@@ -142,6 +142,7 @@ app.post('/api/books', upload.single('image'), (req, res) => {
         }
     );
 });
+
 
 // Get all books
 app.get('/api/books', (req, res) => {
