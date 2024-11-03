@@ -47,14 +47,28 @@ app.post('/signup', (req, res) => {
     const defaultRole = 'user';
 
     db.query(
-        'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', 
-        [username, hashedEmail, hashedPassword, defaultRole], 
-        (err) => {
+        'SELECT * FROM users WHERE username = ? OR email = ?', 
+        [username, hashedEmail], 
+        (err, results) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.status(201).json({ message: 'User registered successfully!' });
+
+            if (results.length > 0) {
+                return res.status(409).json({ message: 'Username or email already exists' });
+            }
+
+    
+            db.query(
+                'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', 
+                [username, hashedEmail, hashedPassword, defaultRole], 
+                (err) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    res.status(201).json({ message: 'User registered successfully' });
+                }
+            );
         }
     );
 });
+
 
 // Login
 app.post('/login', (req, res) => {
@@ -68,12 +82,12 @@ app.post('/login', (req, res) => {
             return res.status(500).json({ error: 'Database query error: ' + err.message });
         }
         if (results.length === 0) {
-            return res.status(404).json({ error: 'No user found.' });
+            return res.status(404).json({ error: 'No user found' });
         }
 
         const user = results[0];
         if (hashedPassword !== user.password) {
-            return res.status(401).json({ error: 'Invalid password.' });
+            return res.status(401).json({ error: 'Invalid password' });
         }
 
         res.json({
@@ -93,13 +107,12 @@ app.get('/users', (req, res) => {
         res.json(results);
     });
 });
-
 // Delete user
 app.delete('/users/:id', (req, res) => {
     const userId = req.params.id;
     db.query('DELETE FROM users WHERE id = ?', [userId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(204).send();
+        res.status(200).json({ message: 'User deleted successfully!' });
     });
 });
 
@@ -109,7 +122,7 @@ app.patch('/users/:id/role', (req, res) => {
     const { role } = req.body;
     db.query('UPDATE users SET role = ? WHERE id = ?', [role, userId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(204).send();
+        res.status(200).json({ message: `User role updated to ${role} successfully!` });
     });
 });
 
@@ -124,6 +137,8 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage });
+
+
 
 // Add Book
 app.post('/api/books', upload.single('image'), (req, res) => {
@@ -164,6 +179,8 @@ app.get('/api/books', (req, res) => {
     });
 });
 
+
+
 app.get('/api/book-counts', (req, res) => {
     db.query('SELECT type, COUNT(*) AS count FROM books GROUP BY type', (err, results) => {
         if (err) {
@@ -183,12 +200,19 @@ app.get('/api/book-counts', (req, res) => {
 // Delete Book
 app.delete('/api/books/:id', (req, res) => {
     const bookId = req.params.id;
-    db.query('DELETE FROM books WHERE id = ?', [bookId], (err) => {
+
+    db.query('DELETE FROM books WHERE id = ?', [bookId], (err, results) => {
         if (err) {
             console.error('SQL Error:', err);
-            return res.status(500).json({ error: err.message });
+            return res.status(500).json({ message: err.message });
         }
-        res.status(204).send();
+
+        if (results.affectedRows === 0) {
+           
+            return res.status(404).json({ message: 'Book not found' });
+        }
+
+        res.status(200).json({ message: 'Book deleted successfully!' });
     });
 });
 
@@ -276,11 +300,9 @@ app.put('/api/trades/:id', (req, res) => {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(200).json({ message: 'Trade updated successfully' });
+        res.status(200).json({ message: 'Trade request accepted' });
     });
 });
-
-
 
 // Delete trade request
 app.delete('/api/trades/:id', (req, res) => {
@@ -290,7 +312,7 @@ app.delete('/api/trades/:id', (req, res) => {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(204).send();
+        res.status(200).json({ message: 'Trade request has been cancel' });
     });
 });
 
@@ -379,7 +401,7 @@ app.put('/api/recommendations', (req, res) => {
                 console.error('SQL Error:', err);
                 return res.status(500).json({ error: err.message });
             }
-            res.status(200).json({ message: `Book recommendation status updated to ${status} successfully!` });
+            res.status(200).json({ message: `Book status updated to ${status} successfully!` });
         }
     );
 });
