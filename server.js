@@ -366,13 +366,13 @@ app.put('/api/purchases/:id', (req, res) => {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(200).json({ message: 'Purchase updated successfully' });
+        res.status(200).json({ message: 'Purchase request accepted' });
     });
 });
 
 
 
-// Delete trade request
+// Delete purchase request
 app.delete('/api/purchases/:id', (req, res) => {
     const purchaseId = req.params.id;
     db.query('DELETE FROM trades WHERE id = ?', [purchaseId], (err) => {
@@ -380,7 +380,7 @@ app.delete('/api/purchases/:id', (req, res) => {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(204).send();
+        res.status(200).json({ message: 'Purchase request has been cancel' });
     });
 });
 
@@ -405,6 +405,57 @@ app.put('/api/recommendations', (req, res) => {
         }
     );
 });
+
+
+
+// Add Complaint
+app.post('/api/complaints', (req, res) => {
+    const { username, email, issueType, detail } = req.body;
+
+    db.query(
+        'INSERT INTO complaints (username, email, issue_type, detail) VALUES (?, ?, ?, ?)', 
+        [username, email, issueType, detail],
+        (err) => {
+            if (err) {
+                console.error('SQL Error:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            res.status(201).json({ message: 'Complaint submitted successfully!' });
+        }
+    );
+});
+
+
+
+// GET all complaints
+app.get('/api/complaints', (req, res) => {
+    const query = 'SELECT * FROM complaints';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching complaints:', err);
+            return res.status(500).json({ error: 'Failed to fetch complaints' });
+        }
+        res.json(results);
+    });
+});
+
+// DELETE complaint
+app.delete('/api/complaints/:id', (req, res) => {
+    const complaintId = req.params.id;
+    const query = 'DELETE FROM complaints WHERE id = ?';
+
+    db.query(query, [complaintId], (err, results) => {
+        if (err) {
+            console.error('Error deleting complaint:', err);
+            return res.status(500).json({ error: 'Failed to delete complaint' });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: 'Complaint not found' });
+        }
+        res.json({ message: 'Complaint deleted successfully' });
+    });
+});
+
 
 
 app.listen(port, () => {
