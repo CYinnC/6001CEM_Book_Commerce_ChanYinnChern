@@ -6,6 +6,7 @@ const crypto = require('crypto'); // For hashing
 const multer = require('multer');
 const path = require('path');
 
+
 const app = express();
 const port = 3001;
 
@@ -375,14 +376,15 @@ app.put('/api/purchases/:id', (req, res) => {
 // Delete purchase request
 app.delete('/api/purchases/:id', (req, res) => {
     const purchaseId = req.params.id;
-    db.query('DELETE FROM trades WHERE id = ?', [purchaseId], (err) => {
+    db.query('DELETE FROM purchases WHERE id = ?', [purchaseId], (err) => {
         if (err) {
             console.error('SQL Error:', err);
             return res.status(500).json({ error: err.message });
         }
-        res.status(200).json({ message: 'Purchase request has been cancel' });
+        res.status(200).json({ message: 'Purchase request has been canceled' });
     });
 });
+
 
 
 // Update recommendation status
